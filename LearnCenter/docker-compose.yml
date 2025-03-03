@@ -1,0 +1,47 @@
+services:
+    lc_web:
+        container_name: lc_web
+        image: nginx:alpine
+        ports:
+            - "8090:80"
+        volumes:
+            - ./:/var/www
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - lc_app
+        networks:
+            - lc_network
+
+    lc_app:
+        container_name: lc_app
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        depends_on:
+            - lc_db
+        volumes:
+            - ./:/var/www
+        networks:
+            - lc_network
+        ports:
+            - "9090:9000"
+
+    lc_db:
+        image: mysql
+        container_name: lc_db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - lc_database:/var/lib/mysql
+        networks:
+            - lc_network
+        expose:
+            - 3344
+networks:
+    lc_network:
+        driver: bridge
+volumes:
+    lc_database:
